@@ -24,7 +24,7 @@
 
 #define PIN 4
 #define LED_COUNT 10
-#define BRIGHTNESS 0x10
+#define BRIGHTNESS 5
 #define SPEED 100
 
 // Create an instance of the Adafruit_NeoPixel class called "leds".
@@ -42,20 +42,24 @@ void setup()
 void loop()
 {
   // Ride the Rainbow Road
-  for (int i=1; i<=LED_COUNT; i++)
+  for (int i=0; i<LED_COUNT; i++)
   {
-    rainbow(i);
-    delay(SPEED);  // Delay between rainbow slides
+    for(unsigned long time = millis();
+        millis() - time < SPEED;)
+    {
+      rainbow(i, ((float) (millis() - time)) / SPEED);
+    }
   }
-  //delay(1000);
   /*
-  // Ride the Rainbow Road
-  for (int i=LED_COUNT; i>0; i--)
+  // Ride the Rainbow Road back
+  for (int i=LED_COUNT-1; i>=0; i--)
   {
-    rainbow(i);
-    delay(SPEED);  // Delay between rainbow slides
+    for(unsigned long time = millis();
+        millis() - time < SPEED;)
+    {
+      rainbow(i, 1 - ((float) (millis() - time)) / SPEED);
+    }
   }
-  //delay(1000);
   */
 }
 
@@ -72,8 +76,9 @@ void clearLEDs()
 
 // Prints a rainbow on the ENTIRE LED strip.
 //  The rainbow begins at a specified position.
-void rainbow(byte startPosition) 
+void rainbow(byte startPosition, float progress) 
 {
+  //Serial.println(progress);
   // Need to scale our rainbow. We want a variety of colors, even if there
   // are just 10 or so pixels.
   float rainbowScale = 1.0 / (LED_COUNT);
@@ -81,10 +86,8 @@ void rainbow(byte startPosition)
   // Next we setup each pixel with the right color
   for (int i=0; i<LED_COUNT; i++)
   {
-    int colorIndex = ((i + startPosition) % (LED_COUNT));
-    //Serial.println(colorIndex);
-    // It'll return a color between red->orange->green->...->violet for 0-191.
-    leds.setPixelColor(i, rainbowColor(rainbowScale * colorIndex));
+    float magic = progress * rainbowScale + (((i + startPosition) % LED_COUNT) * rainbowScale);
+    leds.setPixelColor(i, rainbowColor(magic));// * rainbowScale * colorIndex));
   }
   // Finally, actually turn the LEDs on:
   leds.show();
